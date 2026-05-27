@@ -186,6 +186,16 @@ function handleExhibitLoaded(sceneIndex) {
     }
   });
 
+  // Toggle layout class for side panel (smaller, bottom-right aligned for Thorana, Stupa and Bodhi exhibits)
+  const sceneInfoPanel = document.getElementById('scene-info-panel');
+  if (sceneInfoPanel) {
+    if (sceneIndex >= 2 && sceneIndex <= 5) {
+      sceneInfoPanel.classList.add('side-panel');
+    } else {
+      sceneInfoPanel.classList.remove('side-panel');
+    }
+  }
+
   // Update Audio Mix
   if (audioEngine) {
     audioEngine.updateScene(sceneIndex);

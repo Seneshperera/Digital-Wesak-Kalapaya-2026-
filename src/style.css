@@ -505,6 +505,27 @@ html, body {
   max-width: 600px;
   z-index: 100;
   pointer-events: none;
+  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+#scene-info-panel.side-panel {
+  left: auto;
+  right: 2.8rem;
+  transform: none;
+  max-width: 350px;
+  width: 100%;
+}
+
+#scene-info-panel.side-panel .desc-card {
+  padding: 1.2rem 1.6rem;
+}
+
+#scene-info-panel.side-panel .sinhala-desc {
+  font-size: 1.1rem;
+}
+
+#scene-info-panel.side-panel .english-desc {
+  font-size: 0.8rem;
 }
 
 .desc-card {
@@ -666,10 +687,6 @@ html, body {
  * 8. RIGHT CONTROLS: AUDIO PANEL
  * ========================================== */
 #audio-panel {
-  position: absolute;
-  bottom: 2rem;
-  right: 2.8rem;
-  z-index: 100;
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -785,8 +802,18 @@ html, body {
   }
 
   #audio-panel {
+    position: absolute;
+    top: 1.2rem;
     right: 1.5rem;
-    bottom: 1.2rem;
+    bottom: auto;
+  }
+
+  #scene-info-panel.side-panel {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: 600px;
+    bottom: 5.5rem;
   }
   
   .gate-card {
