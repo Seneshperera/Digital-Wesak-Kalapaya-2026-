@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Google Fonts: Elegant outfit (Sans) and Noto Serif Sinhala (Serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Sinhala:wght@300;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <title>Sacred Wesak Kalapaya - Tikal Ruins Exploration</title>
+  </head>
+  <body>
+    <!-- Global Error Logging Overlay for Diagnostics -->
+    <div id="error-console" style="position:fixed; top:0; left:0; width:100%; max-height:250px; overflow-y:auto; background:rgba(220,53,69,0.95); color:white; font-family:monospace; font-size:12px; z-index:999999; padding:12px; display:none; border-bottom:3px solid #ffc107; box-sizing:border-box;">
+      <h3 style="margin:0 0 8px 0; font-size:14px; text-transform:uppercase;">⚠️ Browser Exception Encountered</h3>
+      <pre id="error-log" style="margin:0; white-space:pre-wrap; word-break:break-all;"></pre>
+      <button onclick="document.getElementById('error-console').style.display='none'" style="margin-top:8px; padding:4px 8px; background:#fff; color:#dc3545; border:none; cursor:pointer; font-weight:bold; border-radius:3px;">Dismiss</button>
+    </div>
+    <script>
+      window.addEventListener('error', function(e) {
+        const consoleEl = document.getElementById('error-console');
+        const logEl = document.getElementById('error-log');
+        if (consoleEl && logEl) {
+          consoleEl.style.display = 'block';
+          logEl.textContent += e.message + '\n  at ' + e.filename + ':' + e.lineno + ':' + e.colno + '\n  ' + (e.error ? e.error.stack : '') + '\n\n';
+        }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        const consoleEl = document.getElementById('error-console');
+        const logEl = document.getElementById('error-log');
+        if (consoleEl && logEl) {
+          consoleEl.style.display = 'block';
+          logEl.textContent += 'Promise Rejected: ' + e.reason + '\n  ' + (e.reason && e.reason.stack ? e.reason.stack : '') + '\n\n';
+        }
+      });
+    </script>
+
+    <!-- 1. LOADING SCREEN (Real Progress Linked) -->
+    <div id="loader">
+      <div class="loader-content">
+        <div class="buddhist-motif">☸</div>
+        <h2>පූජනීය වෙසක් කලාපය පූරණය වේ...</h2>
+        <p>Loading Tikal Ruins Point Cloud...</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="load-progress"></div>
+        </div>
+        <div id="load-percent">0%</div>
+      </div>
+    </div>
+
+    <!-- 2. INTRO / AUDIO GATE SCREEN -->
+    <div id="intro-gate" class="hidden">
+      <div class="gate-overlay">
+        <div class="gate-card">
+          <div class="lotus-emblem">🪷</div>
+          <h1>ඩිජිටල් වෙසක් කලාපයට සාදරයෙන් පිළිගනිමු</h1>
+          <h2 class="sub-title">WESAK KALAPAYA</h2>
+          <p class="description">
+            ආලෝකයෙන්, සාමයෙන් සහ බෞද්ධ සංස්කෘතික සුන්දරත්වයෙන් පිරුණු ආධ්‍යාත්මික ගමනක් අත්විඳින්න.
+          </p>
+          <button id="enter-btn">වෙසක් කලාපයට පිවිසෙන්න <br> <span>ENTER SCENE</span></button>
+          <div class="instructions">
+            <p>👇 ඉදිරියට ගමන් කිරීමට පහළට Scroll කරන්න (හෝ පිවිසෙන්න බොත්තම ක්ලික් කරන්න)</p>
+            <p>🎧 Wear headphones for the spatial ambient soundscape.</p>
+            <p>🖱️ Click and drag to rotate Tikal. Scroll to zoom. Click glowing nodes to load exhibits.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MAIN INTERACTIVE EXPERIENCE CONTAINER -->
+    <div id="app-container">
+      <!-- Background 2D Frame Sequence Canvas (Now acts as the starry night canvas background) -->
+      <canvas id="frame-canvas"></canvas>
+      
+      <!-- Foreground Three.js 3D WebGL Canvas (WebGL point clouds & active exhibits) -->
+      <canvas id="three-canvas"></canvas>
+
+      <!-- 4. FLOATING INTERACTIVE UI OVERLAYS -->
+      
+      <!-- Top Header Navigation -->
+      <header id="experience-header">
+        <div class="brand">
+          <span class="dharmachakra">☸</span>
+          <div>
+            <h1>වෙසක් කලාපය</h1>
+            <span class="eng-brand">WESAK KALAPAYA</span>
+          </div>
+        </div>
+
+        <!-- Progress Timeline dots map (Ruins map overview presets) -->
+        <nav class="scene-map">
+          <div class="map-line"></div>
+          <button class="nav-dot active" data-scene="0" title="Tikal Ruins Overview">
+            <span class="dot-num">01</span>
+            <span class="dot-label">මුල් පිටුව<br>Home</span>
+          </button>
+          <button class="nav-dot" data-scene="1" title="Lantern Path">
+            <span class="dot-num">02</span>
+            <span class="dot-label">වෙසක් කූඩු මාවත<br>Lanterns Path</span>
+          </button>
+          <button class="nav-dot" data-scene="2" title="Colombo Thorana">
+            <span class="dot-num">03</span>
+            <span class="dot-label">බුද්ධ චරිත තොරණ<br>Buddha Biography</span>
+          </button>
+          <button class="nav-dot" data-scene="3" title="Ampara Thorana">
+            <span class="dot-num">04</span>
+            <span class="dot-label">ජාතක කතා තොරණ<br>Jataka Tales</span>
+          </button>
+          <button class="nav-dot" data-scene="4" title="Thuparamaya">
+            <span class="dot-num">05</span>
+            <span class="dot-label">ථූපාරාමය<br>Thuparamaya</span>
+          </button>
+          <button class="nav-dot" data-scene="5" title="Sri Maha Bodhi">
+            <span class="dot-num">06</span>
+            <span class="dot-label">ශ්‍රී මහා බෝධිය<br>Sri Maha Bodhi</span>
+          </button>
+        </nav>
+      </header>
+
+      <!-- Projected Hotspot Labels (Floats dynamically above 3D points) -->
+      <div id="hotspot-labels" class="hidden">
+        <div class="hotspot-label" id="label-lanterns" data-scene="1">
+          <span class="label-lotus">🪷</span> වෙසක් කූඩු මාවත <br> <span>LANTERNS PATH</span>
+        </div>
+        <div class="hotspot-label" id="label-thorana1" data-scene="2">
+          <span class="label-lotus">🪷</span> බුද්ධ චරිත කතා තොරණ <br> <span>BUDDHA BIOGRAPHY</span>
+        </div>
+        <div class="hotspot-label" id="label-thorana2" data-scene="3">
+          <span class="label-lotus">🪷</span> ජාතක කතා තොරණ <br> <span>JATAKA TALES</span>
+        </div>
+        <div class="hotspot-label" id="label-sthupa1" data-scene="4">
+          <span class="label-lotus">🪷</span> ථූපාරාමය <br> <span>THUPARAMAYA</span>
+        </div>
+        <div class="hotspot-label" id="label-mahaweli" data-scene="5">
+          <span class="label-lotus">🪷</span> ශ්‍රී මහා බෝධිය <br> <span>SRI MAHA BODHI</span>
+        </div>
+      </div>
+
+      <!-- Bottom Panel: Poetic Scene Descriptions -->
+      <section id="scene-info-panel">
+        <div class="desc-card">
+          <div class="glow-border"></div>
+          <div class="desc-content" id="scene-text">
+            <h3 class="sinhala-desc">අනුරාධපුර ඓතිහාසික පුරවරය - ඩිජිටල් වෙසක් කලාපය</h3>
+            <p class="english-desc">The sacred ancient city of Anuradhapura, beautifully transformed with glowing Vesak lights and spiritual digital experiences. Click the floating markers to explore each sacred exhibit and Vesak attraction.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Left Control: Quick Guide & Reset View Button -->
+      <div id="guide-overlay">
+        <button id="reset-view-btn" class="hidden">
+          <span class="reset-icon">↺</span>
+          <div>
+            <span>නැවත මුලට</span>
+            <span>BACK TO MAP</span>
+          </div>
+        </button>
+        <div class="guide-item">
+          <span class="guide-icon">⤾</span>
+          <span class="guide-text">DRAG TO ROTATE MAP</span>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">↕</span>
+          <span class="guide-text">SCROLL TO ZOOM</span>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">👆</span>
+          <span class="guide-text">CLICK NODES TO EXPLORE</span>
+        </div>
+      </div>
+
+      <!-- Right Control: Audio Panel -->
+      <div id="audio-panel">
+        <button id="mute-btn" title="Toggle Sound">
+          <svg id="speaker-icon" viewBox="0 0 24 24" width="24" height="24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+        <div class="volume-slider-container">
+          <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" title="Volume">
+        </div>
+      </div>
+
+      <!-- Premium Floating Footer -->
+      <footer id="experience-footer">
+        <div class="footer-content">
+          <p class="final-msg">මෙම ඩිජිටල් වෙසක් කලාපය ශ්‍රී ලාංකීය වෙසක් සංස්කෘතියේ අසිරිය ලොවට ගෙන යාම සඳහා නිර්මාණය කරන ලදී.</p>
+          <div class="footer-meta">
+            <span class="thank-you">බෞද්ධ සංස්කෘතියේ ආලෝකමත් අත්දැකීමක්</span>
+            <span class="divider">|</span>
+            <span class="blessing">පාරම්පරිකත්වය හා තාක්ෂණයේ සුන්දර එකතුවක්</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Main Entry Module JS -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
