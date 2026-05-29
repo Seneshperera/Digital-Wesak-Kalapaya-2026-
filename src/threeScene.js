@@ -321,7 +321,9 @@ export class WesakThree {
       { body: 'Cube.004', tails: ['Plane.005', 'Plane.006'], color: 0xffb703 }, // Yellow Octagonal
       { body: 'Cube.002', tails: ['Plane.004', 'Plane.003'], color: 0xff4d6d }, // Pink
       { body: 'Cube.001', tails: ['Plane.001', 'Plane.002'], color: 0x00f5d4 }, // Cyan
-      { body: 'Cube.003', tails: ['Plane.007', 'Plane.008'], color: 0xfb8500 }  // Orange
+      { body: 'Cube.003', tails: ['Plane.007', 'Plane.008'], color: 0xfb8500 }, // Orange
+      { body: 'Cube.005', tails: ['Plane.009', 'Plane.010'], color: 0xe0aaff }, // Lavender
+      { body: 'Cube.006', tails: ['Plane.011', 'Plane.012', 'Plane.013', 'Plane.014'], color: 0xffffff } // White
     ];
 
     this.lanternTemplates = [];
@@ -338,23 +340,23 @@ export class WesakThree {
 
       // Preserve original materials and textures!
       if (bodyClone.material) {
+        const tweakMaterial = (mat) => {
+          const m = mat.clone();
+          // Keep original color, but set emissive to match base color for a beautiful glow
+          if (m.color) {
+            m.emissive.copy(m.color);
+          }
+          m.emissiveIntensity = 1.3;
+          m.roughness = 0.25;
+          m.metalness = 0.1;
+          m.side = THREE.DoubleSide;
+          return m;
+        };
+
         if (Array.isArray(bodyClone.material)) {
-          bodyClone.material = bodyClone.material.map(mat => {
-            const m = mat.clone();
-            m.emissive = new THREE.Color(map.color);
-            m.emissiveIntensity = 1.3;
-            m.roughness = 0.25;
-            m.metalness = 0.1;
-            m.side = THREE.DoubleSide;
-            return m;
-          });
+          bodyClone.material = bodyClone.material.map(tweakMaterial);
         } else {
-          bodyClone.material = bodyClone.material.clone();
-          bodyClone.material.emissive = new THREE.Color(map.color);
-          bodyClone.material.emissiveIntensity = 1.3;
-          bodyClone.material.roughness = 0.25;
-          bodyClone.material.metalness = 0.1;
-          bodyClone.material.side = THREE.DoubleSide;
+          bodyClone.material = tweakMaterial(bodyClone.material);
         }
       }
       group.add(bodyClone);
@@ -368,19 +370,18 @@ export class WesakThree {
           
           // Preserve tail material!
           if (tailClone.material) {
+            const tweakTailMaterial = (mat) => {
+              const m = mat.clone();
+              m.transparent = true;
+              m.opacity = 0.85;
+              m.side = THREE.DoubleSide;
+              return m;
+            };
+
             if (Array.isArray(tailClone.material)) {
-              tailClone.material = tailClone.material.map(mat => {
-                const m = mat.clone();
-                m.transparent = true;
-                m.opacity = 0.85;
-                m.side = THREE.DoubleSide;
-                return m;
-              });
+              tailClone.material = tailClone.material.map(tweakTailMaterial);
             } else {
-              tailClone.material = tailClone.material.clone();
-              tailClone.material.transparent = true;
-              tailClone.material.opacity = 0.85;
-              tailClone.material.side = THREE.DoubleSide;
+              tailClone.material = tweakTailMaterial(tailClone.material);
             }
           }
           group.add(tailClone);
@@ -434,6 +435,22 @@ export class WesakThree {
         tails.push(child);
       }
     });
+
+    // Update local light color to match the mesh's original material color
+    let lightColor = null;
+    const firstMesh = fbxClone.children.find(c => c.isMesh);
+    if (firstMesh && firstMesh.material) {
+      const mat = Array.isArray(firstMesh.material) ? firstMesh.material[0] : firstMesh.material;
+      if (mat && mat.color) {
+        lightColor = mat.color.clone();
+      }
+    }
+    if (!lightColor && template.color !== undefined) {
+      lightColor = new THREE.Color(template.color);
+    }
+    if (data.light && lightColor) {
+      data.light.color.copy(lightColor);
+    }
 
     lanternGroup.add(fbxClone);
     data.tails = tails;
@@ -619,7 +636,7 @@ export class WesakThree {
       const zOffset = i * -1.8;
       const xOffset = i % 2 === 0 ? -0.8 : 0.8;
       const yOffset = 1.0;
-      this.createHangingLantern(group1, new THREE.Vector3(xOffset, yOffset, zOffset), 0.4, 0xffb703, i % 4);
+      this.createHangingLantern(group1, new THREE.Vector3(xOffset, yOffset, zOffset), 0.4, 0xffb703, i % 6);
     }
     this.createFogPuffs(group1, 8);
     this.sceneGroups.push(group1);
