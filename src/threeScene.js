@@ -6,7 +6,6 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { gsap } from 'gsap';
 
@@ -146,7 +145,7 @@ export class WesakThree {
 
   loadModels() {
     let loadedCount = 0;
-    const totalAssets = 4; // Tikal GLB + FBX Lanterns + Sthupa Srilanka + Mahaweli Sthupa
+    const totalAssets = 3; // Tikal GLB + Sthupa Srilanka + Mahaweli Sthupa (FBX removed - using procedural lanterns)
 
     const checkComplete = () => {
       loadedCount++;
@@ -272,22 +271,7 @@ export class WesakThree {
       }
     );
 
-    // B. Load FBX Lanterns
-    const fbxLoader = new FBXLoader();
-    fbxLoader.load(
-      '/vesak_lanterns.fbx',
-      (fbx) => {
-        this.extractFBXLanterns(fbx);
-        checkComplete();
-      },
-      undefined,
-      (err) => {
-        console.error('Failed to load FBX model:', err);
-        checkComplete();
-      }
-    );
-
-    // C. Load Sthupa Srilanka GLB
+    // B. Load Sthupa Srilanka GLB
     gltfLoader.load(
       '/sthupa_srilanka.glb',
       (gltf) => {
@@ -316,8 +300,151 @@ export class WesakThree {
     );
   }
 
+  // ==========================================
+  // PROCEDURAL AUTHENTIC VESAK LANTERN BUILDER
+  // ==========================================
+
+  /**
+   * Creates a beautiful authentic Wesak lantern using procedural geometry.
+   * Each lantern features:
+   *   - An octagonal paper body with glowing translucent material
+   *   - A top wooden cap ring
+   *   - Hanging fabric tails with gentle wave simulation
+   *   - An inner warm light glow
+   */
+  buildProceduralLantern(colorHex, scale = 1.0) {
+    const group = new THREE.Group();
+    const color = new THREE.Color(colorHex);
+
+    // 1. Main octagonal lantern body
+    const bodyGeom = new THREE.CylinderGeometry(
+      scale * 0.38, scale * 0.38, scale * 0.72, 8, 1, true
+    );
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: color,
+      emissiveIntensity: 0.9,
+      transparent: true,
+      opacity: 0.78,
+      roughness: 0.85,
+      metalness: 0.0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
+    group.add(bodyMesh);
+
+    // 2. Top cap disc
+    const capGeom = new THREE.CylinderGeometry(scale * 0.42, scale * 0.40, scale * 0.09, 8);
+    const capMat = new THREE.MeshStandardMaterial({
+      color: 0x8B4513,
+      roughness: 0.9,
+      metalness: 0.0
+    });
+    const topCap = new THREE.Mesh(capGeom, capMat);
+    topCap.position.y = scale * 0.40;
+    group.add(topCap);
+
+    // 3. Bottom cap disc
+    const botCap = new THREE.Mesh(capGeom, capMat.clone());
+    botCap.position.y = -scale * 0.40;
+    group.add(botCap);
+
+    // 4. Inner glow sphere (additive blend for fire-like glow)
+    const glowGeom = new THREE.SphereGeometry(scale * 0.22, 8, 8);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(colorHex).lerp(new THREE.Color(0xffffff), 0.5),
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const glow = new THREE.Mesh(glowGeom, glowMat);
+    group.add(glow);
+
+    // 5. Top hanging string (thin cylinder)
+    const stringGeom = new THREE.CylinderGeometry(scale * 0.01, scale * 0.01, scale * 0.35, 4);
+    const stringMat = new THREE.MeshBasicMaterial({ color: 0xc8a45a });
+    const string = new THREE.Mesh(stringGeom, stringMat);
+    string.position.y = scale * 0.57;
+    group.add(string);
+
+    // 6. Decorative fabric tails (3 hanging strips)
+    const tails = [];
+    const tailCount = 3;
+    for (let i = 0; i < tailCount; i++) {
+      const angle = (i / tailCount) * Math.PI * 2 + Math.PI / tailCount;
+      const tailGeom = new THREE.PlaneGeometry(scale * 0.14, scale * 0.9, 1, 6);
+      // Slight random curl using vertex morph
+      const posArr = tailGeom.attributes.position.array;
+      for (let v = 0; v < posArr.length; v += 3) {
+        const t = (posArr[v + 1] + scale * 0.45) / (scale * 0.9); // 0 at top, 1 at bottom
+        posArr[v] += Math.sin(t * Math.PI) * scale * 0.06 * (i % 2 === 0 ? 1 : -1);
+      }
+      tailGeom.attributes.position.needsUpdate = true;
+      tailGeom.computeVertexNormals();
+
+      const tailMat = new THREE.MeshStandardMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide,
+        roughness: 0.9,
+        metalness: 0.0,
+        depthWrite: false
+      });
+      const tail = new THREE.Mesh(tailGeom, tailMat);
+      const r = scale * 0.22;
+      tail.position.set(
+        Math.cos(angle) * r,
+        -scale * 0.85,
+        Math.sin(angle) * r
+      );
+      tail.rotation.y = -angle;
+      group.add(tail);
+      tails.push(tail);
+    }
+
+    // 7. Decorative horizontal rings
+    for (let ri = 0; ri < 3; ri++) {
+      const ringY = (ri / 2 - 0.5) * scale * 0.5;
+      const ringGeom = new THREE.TorusGeometry(scale * 0.38, scale * 0.018, 6, 8);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(colorHex).lerp(new THREE.Color(0xffffff), 0.4),
+        transparent: true,
+        opacity: 0.6
+      });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.position.y = ringY;
+      ring.rotation.x = Math.PI / 2;
+      group.add(ring);
+    }
+
+    return { group, tails, color: colorHex };
+  }
+
+  buildProceduralLanternTemplates() {
+    const designs = [
+      { color: 0xffb703, name: 'Yellow'   },
+      { color: 0xff4d6d, name: 'Pink'     },
+      { color: 0x00f5d4, name: 'Cyan'     },
+      { color: 0xfb8500, name: 'Orange'   },
+      { color: 0xe0aaff, name: 'Lavender' },
+      { color: 0xffffff, name: 'White'    }
+    ];
+    this.lanternTemplates = designs.map(d => this.buildProceduralLantern(d.color, 1.0));
+
+    // Now swap all placeholder lanterns immediately
+    this.hangingLanterns.forEach(lan => {
+      this.swapWithFBXLantern(lan);
+    });
+  }
+
+  // Legacy method kept for compatibility - now calls procedural builder
   extractFBXLanterns(fbx) {
-    // Highly robust helper to find meshes flexibly, bypassing FBXLoader character sanitizations (e.g. dots to underscores)
+    // Highly robust helper to find meshes flexibly, bypassing FBXLoader character sanitizations
     const findMeshFlexibly = (name) => {
       // 1. Try exact name match
       let mesh = fbx.getObjectByName(name);
@@ -441,53 +568,55 @@ export class WesakThree {
     const data = lanternGroup.userData;
     if (data.isFBX || !this.lanternTemplates || this.lanternTemplates.length === 0) return;
 
+    // Remove placeholder body
     const placeholder = lanternGroup.getObjectByName('placeholder');
     if (placeholder) lanternGroup.remove(placeholder);
 
+    // Remove placeholder tails
     if (data.placeholderTails) {
       data.placeholderTails.forEach(tail => lanternGroup.remove(tail));
     }
 
     const template = this.lanternTemplates[data.templateIndex % this.lanternTemplates.length];
-    const fbxClone = template.group.clone();
-    fbxClone.scale.setScalar(data.scale * 0.95);
-    fbxClone.rotation.y = Math.random() * Math.PI * 2;
 
-    // Clone materials per instance to avoid sharing material settings (such as opacity during fades)
-    fbxClone.traverse(child => {
+    // Deep-clone the procedural lantern group
+    const lanternClone = template.group.clone();
+    lanternClone.scale.setScalar(data.scale * 2.1); // procedural template built at scale=1, adjust to scene scale
+    lanternClone.rotation.y = Math.random() * Math.PI * 2;
+
+    // Clone materials per instance to prevent shared state issues (opacity fades, etc.)
+    lanternClone.traverse(child => {
       if (child.isMesh && child.material) {
         if (Array.isArray(child.material)) {
           child.material = child.material.map(m => m.clone());
         } else {
           child.material = child.material.clone();
         }
+        // Start transparent - will be faded in when exhibit is activated
+        if (child.material.transparent !== undefined) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(m => { m.transparent = true; });
+          } else {
+            child.material.transparent = true;
+          }
+        }
       }
     });
 
+    // Collect tail meshes from clone (PlaneGeometry meshes that aren't rings)
     const tails = [];
-    fbxClone.traverse(child => {
-      if (child.isMesh && child.name.includes('Plane')) {
+    lanternClone.traverse(child => {
+      if (child.isMesh && child.geometry && child.geometry.type === 'PlaneGeometry') {
         tails.push(child);
       }
     });
 
-    // Update local light color to match the mesh's original material color
-    let lightColor = null;
-    const firstMesh = fbxClone.children.find(c => c.isMesh);
-    if (firstMesh && firstMesh.material) {
-      const mat = Array.isArray(firstMesh.material) ? firstMesh.material[0] : firstMesh.material;
-      if (mat && mat.color) {
-        lightColor = mat.color.clone();
-      }
-    }
-    if (!lightColor && template.color !== undefined) {
-      lightColor = new THREE.Color(template.color);
-    }
-    if (data.light && lightColor) {
-      data.light.color.copy(lightColor);
+    // Update point light color
+    if (data.light) {
+      data.light.color.set(template.color);
     }
 
-    lanternGroup.add(fbxClone);
+    lanternGroup.add(lanternClone);
     data.tails = tails;
     data.isFBX = true;
   }
@@ -665,13 +794,25 @@ export class WesakThree {
     group1.position.set(-2.8, -0.4, 3.2);
     group1.visible = false;
     group1.userData = { opacity: 0 };
+
+    // Build procedural Wesak lantern templates first (no FBX needed)
+    this.buildProceduralLanternTemplates();
     
-    // Add hanging lanterns in row
-    for (let i = 0; i < 6; i++) {
-      const zOffset = i * -1.8;
-      const xOffset = i % 2 === 0 ? -0.8 : 0.8;
-      const yOffset = 1.0;
-      this.createHangingLantern(group1, new THREE.Vector3(xOffset, yOffset, zOffset), 0.4, 0xffb703, i % 6);
+    // Add hanging lanterns in a classic path formation
+    const lanternColors = [0xffb703, 0xff4d6d, 0x00f5d4, 0xfb8500, 0xe0aaff, 0xffffff];
+    for (let i = 0; i < 8; i++) {
+      const zOffset = i * -1.6;
+      const xOffset = i % 2 === 0 ? -0.9 : 0.9;
+      const yOffset = 1.2;
+      const colorIdx = i % lanternColors.length;
+      this.createHangingLantern(group1, new THREE.Vector3(xOffset, yOffset, zOffset), 0.42, lanternColors[colorIdx], colorIdx);
+    }
+    // Add a few more across to create a fuller path
+    for (let i = 0; i < 4; i++) {
+      const zOffset = (i * -3.2) - 0.8;
+      const yOffset = 1.6 + (i % 2) * 0.3;
+      const colorIdx = (i + 2) % lanternColors.length;
+      this.createHangingLantern(group1, new THREE.Vector3(0, yOffset, zOffset), 0.35, lanternColors[colorIdx], colorIdx);
     }
     this.createFogPuffs(group1, 8);
     this.sceneGroups.push(group1);
@@ -744,38 +885,85 @@ export class WesakThree {
     // Position centerGroup slightly above the ground plane
     centerGroup.position.set(0, 0.2, 0);
 
-    // Keep the original materials (gold spire, stone pillars, etc.) and textures, only making them support transparency and start hidden
+    // Apply authentic white limestone/plaster materials to the stupa model
+    // Thuparamaya is a white-plastered stupa - override all materials with correct white finish
     model.traverse(child => {
       if (child.isMesh && child.material) {
+        // Determine if this mesh looks like the spire/finial (smaller, top) vs body (large dome)
+        const childBox = new THREE.Box3().setFromObject(child);
+        const childSize = new THREE.Vector3();
+        childBox.getSize(childSize);
+        const childCenter = new THREE.Vector3();
+        childBox.getCenter(childCenter);
+        const isFinial = childCenter.y > 0 && childSize.y < size.y * 0.35; // top small piece = spire
+        const isLargeDome = childSize.x > size.x * 0.3;
+
         const applyMaterialTweaks = (mat) => {
-          const newMat = mat.clone();
+          const newMat = new THREE.MeshStandardMaterial();
           newMat.side = THREE.DoubleSide;
           newMat.transparent = true;
-          newMat.opacity = 0; // start hidden
+          newMat.opacity = 0; // start hidden - will be faded in
+
+          if (isFinial) {
+            // Spire/finial: golden metallic finish
+            newMat.color = new THREE.Color(0xffd700);
+            newMat.emissive = new THREE.Color(0xb8860b);
+            newMat.emissiveIntensity = 0.3;
+            newMat.metalness = 0.85;
+            newMat.roughness = 0.2;
+          } else if (isLargeDome) {
+            // Main dome body: classic white/cream limestone plaster
+            newMat.color = new THREE.Color(0xfafaf5);
+            newMat.emissive = new THREE.Color(0xffffff);
+            newMat.emissiveIntensity = 0.12;
+            newMat.metalness = 0.0;
+            newMat.roughness = 0.85;
+          } else {
+            // Other parts: warm white with slight stone tint
+            newMat.color = new THREE.Color(0xf0ede6);
+            newMat.emissive = new THREE.Color(0xffffff);
+            newMat.emissiveIntensity = 0.08;
+            newMat.metalness = 0.0;
+            newMat.roughness = 0.9;
+          }
+
+          // Copy texture maps if they exist and look appropriate
+          if (mat.map) newMat.map = mat.map;
+          if (mat.normalMap) newMat.normalMap = mat.normalMap;
+          if (mat.roughnessMap) newMat.roughnessMap = mat.roughnessMap;
           return newMat;
         };
 
         if (Array.isArray(child.material)) {
           child.material = child.material.map(applyMaterialTweaks);
-          child.userData.baseOpacity = child.material[0].opacity !== undefined ? child.material[0].opacity : 1.0;
         } else {
           child.material = applyMaterialTweaks(child.material);
-          child.userData.baseOpacity = child.material.opacity !== undefined ? child.material.opacity : 1.0;
         }
-        if (child.userData.baseOpacity === 0) {
-          child.userData.baseOpacity = 1.0; // Ensure it becomes visible when faded in
-        }
+        child.userData.baseOpacity = 1.0; // Always fade in to fully visible
       }
     });
 
-    // Add local lights to illuminate the stupa with beautiful 3D shading, showing off brick textures and gold elements
-    const keyLight = new THREE.PointLight(0xffffff, 4.0, 18);
-    keyLight.position.set(3, 4, 4); // right, top, front
+    // Add strong key lights to illuminate the white stupa beautifully
+    const keyLight = new THREE.DirectionalLight(0xfff8e8, 3.5);
+    keyLight.position.set(3, 6, 4); // right, top, front
     group.add(keyLight);
 
-    const fillLight = new THREE.PointLight(0xddeeff, 2.0, 18);
-    fillLight.position.set(-3, 2, -4); // left, mid, back
+    const fillLight = new THREE.DirectionalLight(0xddeeff, 1.5);
+    fillLight.position.set(-4, 3, -4); // left, mid, back
     group.add(fillLight);
+
+    // Warm ambient to fill shadows with a golden touch
+    const ambientBoost = new THREE.HemisphereLight(0xfff4d4, 0x222244, 1.2);
+    group.add(ambientBoost);
+
+    // Vesak-style decorative lights around the stupa base
+    const colors = [0xffb703, 0xff4d6d, 0x00f5d4, 0xfb8500];
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const decorLight = new THREE.PointLight(colors[i], 1.5, 5);
+      decorLight.position.set(Math.cos(angle) * 1.8, -0.8, Math.sin(angle) * 1.8);
+      centerGroup.add(decorLight);
+    }
   }
 
   setupMahaweliSthupa(model) {

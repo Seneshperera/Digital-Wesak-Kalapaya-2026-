@@ -19,24 +19,7 @@
       <pre id="error-log" style="margin:0; white-space:pre-wrap; word-break:break-all;"></pre>
       <button onclick="document.getElementById('error-console').style.display='none'" style="margin-top:8px; padding:4px 8px; background:#fff; color:#dc3545; border:none; cursor:pointer; font-weight:bold; border-radius:3px;">Dismiss</button>
     </div>
-    <script>
-      window.addEventListener('error', function(e) {
-        const consoleEl = document.getElementById('error-console');
-        const logEl = document.getElementById('error-log');
-        if (consoleEl && logEl) {
-          consoleEl.style.display = 'block';
-          logEl.textContent += e.message + '\n  at ' + e.filename + ':' + e.lineno + ':' + e.colno + '\n  ' + (e.error ? e.error.stack : '') + '\n\n';
-        }
-      });
-      window.addEventListener('unhandledrejection', function(e) {
-        const consoleEl = document.getElementById('error-console');
-        const logEl = document.getElementById('error-log');
-        if (consoleEl && logEl) {
-          consoleEl.style.display = 'block';
-          logEl.textContent += 'Promise Rejected: ' + e.reason + '\n  ' + (e.reason && e.reason.stack ? e.reason.stack : '') + '\n\n';
-        }
-      });
-    </script>
+
 
     <!-- 1. LOADING SCREEN (Real Progress Linked) -->
     <div id="loader">
