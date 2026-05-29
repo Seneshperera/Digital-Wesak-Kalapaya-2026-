@@ -898,3 +898,626 @@ html, body {
     font-size: 0.55rem;
   }
 }
+
+/* ==========================================
+ * 9. WESAK WISHING CARD GENERATOR
+ * ========================================== */
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  pointer-events: auto;
+}
+
+.header-action-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-top-color: var(--glass-glow-border);
+  border-radius: 30px;
+  color: var(--white-soft);
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.header-action-btn:hover {
+  border-color: var(--gold-solid);
+  box-shadow: 0 0 15px var(--gold-glow);
+  transform: translateY(-2px);
+}
+
+.header-action-btn .btn-icon {
+  font-size: 1.1rem;
+  filter: drop-shadow(0 0 3px var(--gold-solid));
+  animation: floatIndicator 2s ease-in-out infinite;
+}
+
+.header-action-btn .btn-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-family: var(--font-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.header-action-btn .btn-text span {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: var(--gold-solid);
+  letter-spacing: 1px;
+}
+
+/* Modal Overlay & Centering */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 4, 11, 0.85);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: rgba(7, 9, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 2px solid var(--gold-glow);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 133, 0, 0.1);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 820px;
+  padding: 2.2rem;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-solid) rgba(255,255,255,0.05);
+}
+
+/* Scrollbar styles for modal-card */
+.modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-card::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+}
+.modal-card::-webkit-scrollbar-thumb {
+  background: var(--gold-solid);
+  border-radius: 3px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: var(--gray-muted);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: color 0.3s;
+  outline: none;
+}
+
+.close-btn:hover {
+  color: #ff4d6d;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.modal-lotus-icon {
+  font-size: 2.2rem;
+  display: inline-block;
+  filter: drop-shadow(0 0 8px var(--gold-solid));
+  animation: floatIndicator 2s ease-in-out infinite;
+}
+
+.modal-header h2 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--white-soft);
+  margin-top: 0.4rem;
+  margin-bottom: 0.1rem;
+}
+
+.modal-header .sub {
+  font-size: 0.72rem;
+  color: var(--gold-solid);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Modal Body Layout */
+.modal-body {
+  display: flex;
+  gap: 2.2rem;
+  margin-bottom: 2rem;
+}
+
+.creator-form {
+  flex: 1.1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.card-preview-area {
+  flex: 0.9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.card-preview-area label, .form-group label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--gray-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+/* Inputs and Forms styling */
+.form-group input[type="text"], .form-group textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--white-soft);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.88rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-group input[type="text"]:focus, .form-group textarea:focus {
+  border-color: var(--gold-solid);
+  box-shadow: 0 0 10px rgba(255, 210, 0, 0.25);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.form-group textarea {
+  resize: none;
+}
+
+/* Template option circles selector */
+.template-selector {
+  display: flex;
+  gap: 1rem;
+}
+
+.template-option {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.template-option .thumb {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.template-option .thumb.t1 { background: radial-gradient(circle, #3a290d, #0c0802); }
+.template-option .thumb.t2 { background: radial-gradient(circle, #0e1b42, #030614); }
+.template-option .thumb.t3 { background: radial-gradient(circle, #441708, #0f050b); }
+
+.template-option .name {
+  font-size: 0.68rem;
+  color: var(--gray-muted);
+  font-weight: 600;
+}
+
+.template-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.template-option.active {
+  border-color: var(--gold-solid);
+  background: rgba(255, 210, 0, 0.06);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+.template-option.active .name {
+  color: var(--gold-solid);
+}
+
+/* Preset buttons styling */
+.preset-wishes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #c9ceee;
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.preset-btn:hover {
+  background: rgba(255, 210, 0, 0.15);
+  border-color: var(--gold-solid);
+  color: var(--white-soft);
+}
+
+/* Dynamic Wish Card Design */
+.wish-card {
+  width: 320px;
+  height: 400px;
+  border-radius: 14px;
+  padding: 1.8rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.wish-card .card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.wish-card .card-frame {
+  flex: 1;
+  border-radius: 8px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+  position: relative;
+  text-align: center;
+}
+
+.wish-card .card-lotus {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.wish-card .card-to-field {
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  margin-top: 0.5rem;
+  opacity: 0.9;
+}
+
+.wish-card .card-to-field span {
+  font-weight: 700;
+}
+
+.wish-card .card-message-field {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-style: italic;
+  margin: 1.2rem 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-word;
+}
+
+.wish-card .card-from-field {
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  opacity: 0.9;
+}
+
+.wish-card .card-from-field span {
+  font-weight: 700;
+}
+
+.wish-card .card-dharmachakra {
+  font-size: 1.4rem;
+  margin-top: 0.6rem;
+  animation: spinDharma 45s linear infinite;
+  opacity: 0.45;
+}
+
+/* Card Templates Theme Styles */
+.wish-card.template-1 {
+  background: radial-gradient(circle at center, #281c06 0%, #0a0702 100%);
+  border: 2px solid var(--gold-solid);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 210, 0, 0.2);
+  color: #fffdec;
+}
+.wish-card.template-1 .card-glow {
+  background: radial-gradient(circle, var(--gold-solid) 0%, transparent 70%);
+}
+.wish-card.template-1 .card-frame {
+  border: 1px dashed rgba(255, 210, 0, 0.3);
+}
+.wish-card.template-1 .card-lotus {
+  color: var(--gold-solid);
+}
+.wish-card.template-1 .card-dharmachakra {
+  color: var(--gold-solid);
+}
+
+.wish-card.template-2 {
+  background: radial-gradient(circle at center, #0f1d46 0%, #030614 100%);
+  border: 2px solid #ff4d6d;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 77, 109, 0.2);
+  color: #fdf2f4;
+}
+.wish-card.template-2 .card-glow {
+  background: radial-gradient(circle, #ff4d6d 0%, transparent 70%);
+}
+.wish-card.template-2 .card-frame {
+  border: 1px dashed rgba(255, 77, 109, 0.3);
+}
+.wish-card.template-2 .card-lotus {
+  color: #ff4d6d;
+}
+.wish-card.template-2 .card-dharmachakra {
+  color: #ff4d6d;
+}
+
+.wish-card.template-3 {
+  background: radial-gradient(circle at center, #351306 0%, #0e050c 100%);
+  border: 2px solid #fb8500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(251, 133, 0, 0.2);
+  color: #fff7f2;
+}
+.wish-card.template-3 .card-glow {
+  background: radial-gradient(circle, #fb8500 0%, transparent 70%);
+}
+.wish-card.template-3 .card-frame {
+  border: 1px dashed rgba(251, 133, 0, 0.3);
+}
+.wish-card.template-3 .card-lotus {
+  color: #fb8500;
+}
+.wish-card.template-3 .card-dharmachakra {
+  color: #fb8500;
+}
+
+/* Modal Footer Buttons */
+.modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.share-action-btn {
+  flex: 1;
+  border: none;
+  border-radius: 30px;
+  color: #030409;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-family: var(--font-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: all 0.3s;
+  outline: none;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.share-action-btn .icon {
+  font-size: 1.1rem;
+}
+
+.share-action-btn span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.share-action-btn span span {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  opacity: 0.75;
+  letter-spacing: 0.5px;
+}
+
+.share-action-btn.copy-link {
+  background: linear-gradient(135deg, #ffb703 0%, #ffd200 100%);
+}
+.share-action-btn.whatsapp {
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #ffffff;
+}
+.share-action-btn.email {
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+  color: #ffffff;
+}
+
+.share-action-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+
+.share-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Received Wish Presenter Styles */
+.received-wish-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.8rem;
+  max-width: 480px;
+  width: 90%;
+  padding: 2.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  border-radius: 16px;
+  text-align: center;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  animation: breatheGlow 10s ease-in-out infinite;
+}
+
+.received-wish-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.received-lotus {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 10px var(--gold-solid));
+  animation: floatIndicator 2s ease-in-out infinite;
+  margin-bottom: 0.2rem;
+}
+
+.received-wish-title h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--white-soft);
+}
+
+.received-wish-title p {
+  font-size: 0.72rem;
+  color: var(--gold-solid);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.received-action-btn {
+  background: linear-gradient(135deg, #fb8500 0%, #ffb703 100%);
+  border: none;
+  border-radius: 30px;
+  color: #030409;
+  padding: 1rem 2rem;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(251, 133, 0, 0.35);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  outline: none;
+  width: 100%;
+}
+
+.received-action-btn span {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  opacity: 0.85;
+}
+
+.received-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(251, 133, 0, 0.55);
+}
+
+/* ==========================================
+ * RESPONSIVE ADJUSTMENTS (Wishes modal)
+ * ========================================== */
+@media (max-width: 768px) {
+  .header-controls {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.5rem;
+    gap: 0.5rem;
+  }
+  
+  .header-action-btn {
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .header-action-btn .btn-text {
+    display: none; /* Hide text on mobile to fit button icon only */
+  }
+  
+  .modal-card {
+    padding: 1.5rem;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .modal-body {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .card-preview-area {
+    order: -1; /* Display preview on top on mobile screens */
+  }
+  
+  .wish-card {
+    width: 100%;
+    max-width: 290px;
+    height: 350px;
+    padding: 1.2rem;
+  }
+  
+  .wish-card .card-message-field {
+    font-size: 0.85rem;
+    margin: 0.8rem 0;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+}

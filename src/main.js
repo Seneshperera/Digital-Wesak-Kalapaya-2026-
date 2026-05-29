@@ -59,6 +59,12 @@ window.addEventListener('DOMContentLoaded', () => {
   );
   
   threeEngine.init();
+
+  // Initialize wishes modal and forms
+  initWishesFeature();
+
+  // Check if a wish was received in URL params
+  checkReceivedWish();
 });
 
 // Updates Loading screen percent text
@@ -77,14 +83,18 @@ function handleLoadProgress(percent) {
   }
 }
 
-// 2. Click handler to Enter the Scene
-document.getElementById('enter-btn').addEventListener('click', async () => {
+// 2. Helper to start experience (gesture triggered)
+async function startExperience() {
+  if (activeExperience) return;
+
   // Start spatial audio (gesture triggered)
   audioEngine = new WesakAudio();
   await audioEngine.init();
 
-  // Hide Intro Gate
+  // Hide Intro Gate and received wish overlay
   document.getElementById('intro-gate').classList.add('fade-out');
+  const receivedOverlay = document.getElementById('received-wish-overlay');
+  if (receivedOverlay) receivedOverlay.classList.add('fade-out');
   
   // Fade in HTML labels
   document.getElementById('hotspot-labels').classList.remove('hidden');
@@ -129,21 +139,29 @@ document.getElementById('enter-btn').addEventListener('click', async () => {
   const muteBtn = document.getElementById('mute-btn');
   const volumeSlider = document.getElementById('volume-slider');
 
-  muteBtn.addEventListener('click', () => {
-    const isMuted = audioEngine.toggleMute();
-    if (isMuted) {
-      muteBtn.classList.add('muted');
-    } else {
-      muteBtn.classList.remove('muted');
-    }
-  });
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      const isMuted = audioEngine.toggleMute();
+      if (isMuted) {
+        muteBtn.classList.add('muted');
+      } else {
+        muteBtn.classList.remove('muted');
+      }
+    });
+  }
 
-  volumeSlider.addEventListener('input', (e) => {
-    audioEngine.setVolume(parseFloat(e.target.value));
-  });
+  if (volumeSlider) {
+    volumeSlider.addEventListener('input', (e) => {
+      audioEngine.setVolume(parseFloat(e.target.value));
+    });
+  }
 
   handleResize();
   animate();
+}
+
+document.getElementById('enter-btn').addEventListener('click', async () => {
+  await startExperience();
 });
 
 // 3. Coordinate mouse position
@@ -234,5 +252,180 @@ function animate() {
       normalizedMouse.x,
       normalizedMouse.y
     );
+  }
+}
+
+// 8. Wishes modal creation and sharing features
+function initWishesFeature() {
+  const wishesModal = document.getElementById('wishes-modal');
+  const createWishBtn = document.getElementById('create-wish-btn');
+  const closeWishesBtn = document.getElementById('close-wishes-btn');
+  
+  const senderInput = document.getElementById('wish-sender');
+  const recipientInput = document.getElementById('wish-recipient');
+  const messageInput = document.getElementById('wish-message');
+  
+  const previewCard = document.getElementById('preview-card');
+  const previewTo = document.getElementById('preview-to');
+  const previewFrom = document.getElementById('preview-from');
+  const previewMessage = document.querySelector('#preview-card .card-message-field');
+  
+  const templateOptions = document.querySelectorAll('.template-option');
+  const presetBtns = document.querySelectorAll('.preset-btn');
+  
+  const copyLinkBtn = document.getElementById('copy-wish-link-btn');
+  const whatsappBtn = document.getElementById('whatsapp-wish-btn');
+  const emailBtn = document.getElementById('email-wish-btn');
+  
+  let selectedTemplate = 1;
+
+  if (!wishesModal || !createWishBtn) return;
+
+  // Open modal
+  createWishBtn.addEventListener('click', () => {
+    wishesModal.classList.remove('hidden');
+    updateCardPreview();
+  });
+
+  // Close modal
+  closeWishesBtn.addEventListener('click', () => {
+    wishesModal.classList.add('hidden');
+  });
+  
+  wishesModal.addEventListener('click', (e) => {
+    if (e.target === wishesModal) {
+      wishesModal.classList.add('hidden');
+    }
+  });
+
+  // Sync inputs with live preview card
+  const updateCardPreview = () => {
+    const toName = recipientInput.value.trim();
+    previewTo.textContent = toName || "Everyone";
+    
+    const fromName = senderInput.value.trim();
+    previewFrom.textContent = fromName || "Digital Wesak Kalapaya";
+    
+    const msg = messageInput.value.trim();
+    previewMessage.textContent = msg ? `"${msg}"` : `"මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!"`;
+  };
+
+  senderInput.addEventListener('input', updateCardPreview);
+  recipientInput.addEventListener('input', updateCardPreview);
+  messageInput.addEventListener('input', updateCardPreview);
+
+  // Template select
+  templateOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      templateOptions.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      
+      const templateId = parseInt(opt.getAttribute('data-template'));
+      selectedTemplate = templateId;
+      
+      // Update preview card template class
+      previewCard.className = `wish-card template-${templateId}`;
+    });
+  });
+
+  // Preset blessing select
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-wish');
+      messageInput.value = text;
+      updateCardPreview();
+    });
+  });
+
+  // Sharing utilities
+  const getShareLink = () => {
+    const data = {
+      s: senderInput.value.trim() || "Digital Wesak Kalapaya",
+      r: recipientInput.value.trim() || "Everyone",
+      m: messageInput.value.trim() || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!",
+      t: selectedTemplate
+    };
+
+    // UTF-8 safe base64 encoding
+    const json = JSON.stringify(data);
+    const b64 = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+      return String.fromCharCode('0x' + p1);
+    }));
+
+    return `${window.location.origin}${window.location.pathname}?wish=${b64}`;
+  };
+
+  copyLinkBtn.addEventListener('click', () => {
+    const link = getShareLink();
+    navigator.clipboard.writeText(link).then(() => {
+      const originalText = copyLinkBtn.innerHTML;
+      copyLinkBtn.innerHTML = `
+        <span class="icon">✓</span>
+        <span>සාර්ථකව පිටපත් විය!<br><span>LINK COPIED!</span></span>
+      `;
+      setTimeout(() => {
+        copyLinkBtn.innerHTML = originalText;
+      }, 2000);
+    }).catch(err => {
+      console.error("Clipboard copy failed:", err);
+      alert("Please copy this link: " + link);
+    });
+  });
+
+  whatsappBtn.addEventListener('click', () => {
+    const link = getShareLink();
+    const text = encodeURIComponent("🪷 ඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් සුභ පැතුම් පතක්! / A special Digital Wesak Wish for you: " + link);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+  });
+
+  emailBtn.addEventListener('click', () => {
+    const link = getShareLink();
+    const subject = encodeURIComponent("පින්බර වෙසක් මංගල්‍යයක් වේවා! / A Digital Wesak Blessing for You");
+    const body = encodeURIComponent("තෙරුවන් සරණින් ඔබට සාමකාමී වෙසක් මංගල්‍යයක් වේවා!\n\nඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත නැරඹීමට පහත සබැඳිය ක්ලික් කරන්න:\n\n" + link);
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_self");
+  });
+}
+
+function checkReceivedWish() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const wishB64 = urlParams.get('wish');
+  if (!wishB64) return;
+
+  try {
+    // UTF-8 safe base64 decoding
+    const binary = atob(wishB64);
+    const json = decodeURIComponent(Array.prototype.map.call(binary, (c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    const data = JSON.parse(json);
+
+    const receivedOverlay = document.getElementById('received-wish-overlay');
+    const receivedCard = document.getElementById('received-card');
+    const receivedTo = document.getElementById('received-to');
+    const receivedFrom = document.getElementById('received-from');
+    const receivedMessage = document.querySelector('#received-card .card-message-field');
+    const enterReceivedBtn = document.getElementById('enter-received-kalapaya-btn');
+
+    if (receivedOverlay && receivedCard && data) {
+      receivedTo.textContent = data.r || "Everyone";
+      receivedFrom.textContent = data.s || "Digital Wesak Kalapaya";
+      receivedMessage.textContent = data.m ? `"${data.m}"` : "";
+      
+      // Apply theme template class
+      receivedCard.className = `wish-card template-${data.t || 1}`;
+
+      // Show received wish overlay and hide standard gate
+      receivedOverlay.classList.remove('hidden');
+      document.getElementById('intro-gate').classList.add('hidden');
+
+      // Bind guest enter experience click trigger
+      if (enterReceivedBtn) {
+        enterReceivedBtn.addEventListener('click', async () => {
+          await startExperience();
+        });
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse incoming wish data:", e);
   }
 }

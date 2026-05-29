@@ -692,19 +692,27 @@ export class WesakThree {
     // Position centerGroup slightly above the ground plane
     centerGroup.position.set(0, 0.2, 0);
 
-    // Override material to make it a beautiful, clean, traditional white plaster stupa with glowing night highlights
+    // Override material to make it a beautiful, clean, traditional white plaster stupa with glowing night highlights, preserving original textures
     model.traverse(child => {
-      if (child.isMesh) {
-        child.material = new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          roughness: 0.85,
-          metalness: 0.0,
-          emissive: new THREE.Color(0x333333), // Spiritual white glow in the dark
-          side: THREE.DoubleSide
-        });
+      if (child.isMesh && child.material) {
+        const applyMaterialTweaks = (mat) => {
+          const newMat = mat.clone();
+          newMat.color.setHex(0xffffff);
+          newMat.roughness = 0.85;
+          newMat.metalness = 0.0;
+          newMat.emissive = new THREE.Color(0x333333); // Spiritual white glow in the dark
+          newMat.side = THREE.DoubleSide;
+          newMat.transparent = true;
+          newMat.opacity = 0; // start hidden
+          return newMat;
+        };
+
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(applyMaterialTweaks);
+        } else {
+          child.material = applyMaterialTweaks(child.material);
+        }
         child.userData.baseOpacity = 1.0;
-        child.material.transparent = true;
-        child.material.opacity = 0; // start hidden
       }
     });
   }

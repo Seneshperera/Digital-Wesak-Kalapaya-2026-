@@ -120,15 +120,23 @@
           </button>
         </nav>
 
-        <!-- Right Control: Audio Panel -->
-        <div id="audio-panel">
-          <button id="mute-btn" title="Toggle Sound">
-            <svg id="speaker-icon" viewBox="0 0 24 24" width="24" height="24">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
+        <!-- Right Controls Group -->
+        <div class="header-controls">
+          <button id="create-wish-btn" class="header-action-btn" title="Create Wesak Wish Card">
+            <span class="btn-icon">🪷</span>
+            <span class="btn-text">ප්‍රාර්ථනා පතක් සාදන්න<br><span>CREATE WISH CARD</span></span>
           </button>
-          <div class="volume-slider-container">
-            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" title="Volume">
+
+          <!-- Right Control: Audio Panel -->
+          <div id="audio-panel">
+            <button id="mute-btn" title="Toggle Sound">
+              <svg id="speaker-icon" viewBox="0 0 24 24" width="24" height="24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+              </svg>
+            </button>
+            <div class="volume-slider-container">
+              <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" title="Volume">
+            </div>
           </div>
         </div>
       </header>
@@ -186,7 +194,118 @@
         </div>
       </div>
 
+      <!-- 5. DIGITAL WESAK WISHES MODAL -->
+      <div id="wishes-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+          <button id="close-wishes-btn" class="close-btn" title="Close Modal">&times;</button>
+          
+          <div class="modal-header">
+            <span class="modal-lotus-icon">🪷</span>
+            <h2>ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත</h2>
+            <p class="sub">CREATE YOUR WESAK WISHING CARD</p>
+          </div>
 
+          <div class="modal-body">
+            <!-- Left Side: Creator Form -->
+            <div class="creator-form">
+              <div class="form-group">
+                <label>ප්‍රාර්ථනා පතේ හැඩතල (Template)</label>
+                <div class="template-selector">
+                  <button class="template-option active" data-template="1" title="Golden Temple Glow">
+                    <span class="thumb t1"></span>
+                    <span class="name">Golden Temple</span>
+                  </button>
+                  <button class="template-option" data-template="2" title="Serene Lotus Night">
+                    <span class="thumb t2"></span>
+                    <span class="name">Lotus Night</span>
+                  </button>
+                  <button class="template-option" data-template="3" title="Lantern Horizon">
+                    <span class="thumb t3"></span>
+                    <span class="name">Lantern Horizon</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="wish-sender">ඔබේ නම (Your Name)</label>
+                <input type="text" id="wish-sender" placeholder="உදා: අමර / Enter your name..." maxlength="25">
+              </div>
+
+              <div class="form-group">
+                <label for="wish-recipient">ලබන්නාගේ නම (Recipient's Name - Optional)</label>
+                <input type="text" id="wish-recipient" placeholder="உදා: සුනිල් / Enter recipient name..." maxlength="25">
+              </div>
+
+              <div class="form-group">
+                <label>ප්‍රාර්ථනා පණිවිඩය (Your Blessing)</label>
+                <textarea id="wish-message" rows="3" placeholder="ඔබේ ප්‍රාර්ථනාව මෙහි ලියන්න... / Type your wish here..." maxlength="200"></textarea>
+                <div class="preset-wishes">
+                  <button class="preset-btn" data-wish="මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා! / May this sacred Vesak bring peace, happiness, and enlightenment to your life.">සාමය සහ නිවන (Peace & Light)</button>
+                  <button class="preset-btn" data-wish="පින්බර වෙසක් මංගල්‍යයක් වේවා! තෙරුවන් සරණින් සියලු යහපත උදාවේවා! / Wishing you a blessed Vesak filled with the triple gem blessings!">පින්බර වෙසක් (Blessed Vesak)</button>
+                  <button class="preset-btn" data-wish="ලෝකයම ධර්මයේ ආලෝකයෙන් ඒකාලෝක වේවා! ඔබට සාමකාමී වෙසක් මංගල්‍යයක් වේවා! / May the light of Dhamma illuminate the world! Have a peaceful Vesak!">ධර්මයේ ආලෝකය (Light of Dhamma)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side: Live Card Preview -->
+            <div class="card-preview-area">
+              <label>පූර්ව දර්ශනය (Live Card Preview)</label>
+              <div id="preview-card" class="wish-card template-1">
+                <div class="card-glow"></div>
+                <div class="card-frame">
+                  <div class="card-lotus">🪷</div>
+                  <div class="card-to-field">To: <span id="preview-to">Everyone</span></div>
+                  <div class="card-message-field">"මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!"</div>
+                  <div class="card-from-field">From: <span id="preview-from">Digital Wesak Kalapaya</span></div>
+                  <div class="card-dharmachakra">☸</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button id="copy-wish-link-btn" class="share-action-btn copy-link">
+              <span class="icon">🔗</span>
+              <span>සබැඳිය පිටපත් කරන්න<br><span>COPY SHARE LINK</span></span>
+            </button>
+            <button id="whatsapp-wish-btn" class="share-action-btn whatsapp">
+              <span class="icon">💬</span>
+              <span>වට්ස්ඇප් මඟින් යවන්න<br><span>SHARE ON WHATSAPP</span></span>
+            </button>
+            <button id="email-wish-btn" class="share-action-btn email">
+              <span class="icon">✉️</span>
+              <span>විද්‍යුත් තැපෑලෙන් යවන්න<br><span>SEND VIA EMAIL</span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. RECEIVED WISH OVERLAY (FULL SCREEN DISPLAY FOR RECIPIENT) -->
+      <div id="received-wish-overlay" class="modal-overlay hidden">
+        <div class="received-wish-container">
+          <div class="received-wish-title">
+            <span class="received-lotus">🪷</span>
+            <h2>ඔබට ලැබුණු වෙසක් ප්‍රාර්ථනාවක්</h2>
+            <p>A SPECIAL WESAK BLESSING FOR YOU</p>
+          </div>
+          
+          <!-- Received card representation -->
+          <div id="received-card" class="wish-card template-1">
+            <div class="card-glow"></div>
+            <div class="card-frame">
+              <div class="card-lotus">🪷</div>
+              <div class="card-to-field">To: <span id="received-to">...</span></div>
+              <div class="card-message-field">"..."</div>
+              <div class="card-from-field">From: <span id="received-from">...</span></div>
+              <div class="card-dharmachakra">☸</div>
+            </div>
+          </div>
+
+          <button id="enter-received-kalapaya-btn" class="received-action-btn">
+            ඩිජිටල් වෙසක් කලාපයට පිවිසෙන්න <br> <span>ENTER DIGITAL WESAK ZONE</span>
+          </button>
+        </div>
+      </div>
 
       <!-- Premium Floating Footer -->
       <footer id="experience-footer">
