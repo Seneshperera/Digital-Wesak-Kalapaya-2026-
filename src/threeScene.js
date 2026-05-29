@@ -317,17 +317,35 @@ export class WesakThree {
   }
 
   extractFBXLanterns(fbx) {
-    const names = [];
-    fbx.traverse(c => {
-      if (c.isMesh) names.push(c.name);
-    });
-    console.log("FBX Mesh Names:", names);
-    const logEl = document.getElementById('error-log');
-    const consoleEl = document.getElementById('error-console');
-    if (logEl && consoleEl) {
-      consoleEl.style.display = 'block';
-      logEl.textContent += "FBX Mesh Names:\n" + JSON.stringify(names) + "\n\n";
-    }
+    // Highly robust helper to find meshes flexibly, bypassing FBXLoader character sanitizations (e.g. dots to underscores)
+    const findMeshFlexibly = (name) => {
+      // 1. Try exact name match
+      let mesh = fbx.getObjectByName(name);
+      if (mesh) return mesh;
+
+      // 2. Try replacing dots with underscores
+      const underName = name.replace(/\./g, '_');
+      mesh = fbx.getObjectByName(underName);
+      if (mesh) return mesh;
+
+      // 3. Try removing dots and underscores entirely
+      const plainName = name.replace(/[\._]/g, '');
+      mesh = fbx.getObjectByName(plainName);
+      if (mesh) return mesh;
+
+      // 4. Try case-insensitive and character-insensitive traversal
+      let foundChild = null;
+      fbx.traverse(child => {
+        if (!foundChild && child.isMesh) {
+          const cleanChild = child.name.toLowerCase().replace(/[\._]/g, '');
+          const cleanTarget = name.toLowerCase().replace(/[\._]/g, '');
+          if (cleanChild === cleanTarget) {
+            foundChild = child;
+          }
+        }
+      });
+      return foundChild;
+    };
 
     const mappings = [
       { body: 'Cube.004', tails: ['Plane.005', 'Plane.006'], color: 0xffb703 }, // Yellow Octagonal
@@ -341,8 +359,11 @@ export class WesakThree {
     this.lanternTemplates = [];
 
     mappings.forEach(map => {
-      const bodyMesh = fbx.getObjectByName(map.body);
-      if (!bodyMesh) return;
+      const bodyMesh = findMeshFlexibly(map.body);
+      if (!bodyMesh) {
+        console.warn(`Could not find body mesh: ${map.body}`);
+        return;
+      }
 
       const group = new THREE.Group();
       
@@ -375,7 +396,7 @@ export class WesakThree {
 
       const tailClones = [];
       map.tails.forEach(tailName => {
-        const tailMesh = fbx.getObjectByName(tailName);
+        const tailMesh = findMeshFlexibly(tailName);
         if (tailMesh) {
           const tailClone = tailMesh.clone();
           tailClone.position.sub(centerPos);
@@ -398,6 +419,8 @@ export class WesakThree {
           }
           group.add(tailClone);
           tailClones.push(tailClone);
+        } else {
+          console.warn(`Could not find tail mesh: ${tailName}`);
         }
       });
 
