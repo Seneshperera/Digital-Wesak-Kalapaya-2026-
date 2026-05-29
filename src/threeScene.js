@@ -317,6 +317,18 @@ export class WesakThree {
   }
 
   extractFBXLanterns(fbx) {
+    const names = [];
+    fbx.traverse(c => {
+      if (c.isMesh) names.push(c.name);
+    });
+    console.log("FBX Mesh Names:", names);
+    const logEl = document.getElementById('error-log');
+    const consoleEl = document.getElementById('error-console');
+    if (logEl && consoleEl) {
+      consoleEl.style.display = 'block';
+      logEl.textContent += "FBX Mesh Names:\n" + JSON.stringify(names) + "\n\n";
+    }
+
     const mappings = [
       { body: 'Cube.004', tails: ['Plane.005', 'Plane.006'], color: 0xffb703 }, // Yellow Octagonal
       { body: 'Cube.002', tails: ['Plane.004', 'Plane.003'], color: 0xff4d6d }, // Pink
