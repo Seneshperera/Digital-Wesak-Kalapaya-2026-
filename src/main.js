@@ -399,7 +399,6 @@ function initWishesFeature() {
   
   const downloadBtn = document.getElementById('download-wish-card-btn');
   const copyLinkBtn = document.getElementById('copy-wish-link-btn');
-  const whatsappBtn = document.getElementById('whatsapp-wish-btn');
   const emailBtn = document.getElementById('email-wish-btn');
   
   let selectedTemplate = 1;
@@ -506,33 +505,34 @@ function initWishesFeature() {
     });
   });
 
-  whatsappBtn.addEventListener('click', () => {
+  emailBtn.addEventListener('click', async () => {
     const link = getShareLink();
     const sender = senderInput.value.trim() || "Digital Wesak Kalapaya";
     const recipient = recipientInput.value.trim() || "Everyone";
     const message = messageInput.value.trim() || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!";
     
-    const textStr = 
-`🪷 *ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත* 🪷
-----------------------------------------
-*To:* ${recipient}
+    // Copy the wish card image to the clipboard dynamically
+    try {
+      const dataURL = generateCardImageURL(sender, recipient, message, selectedTemplate);
+      const res = await fetch(dataURL);
+      const blob = await res.blob();
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob
+        })
+      ]);
+      console.log("Card image copied to clipboard.");
+    } catch (err) {
+      console.error("Clipboard image copy failed:", err);
+    }
 
-_" ${message} "_
+    // Trigger a backup download of the card image automatically
+    try {
+      triggerCardDownload(sender, recipient, message, selectedTemplate);
+    } catch (err) {
+      console.error("Backup download failed:", err);
+    }
 
-*From:* ${sender}
-----------------------------------------
-👇 *ප්‍රාර්ථනා පත නැරඹීමට සහ ඩිජිටල් වෙසක් කලාපයට පිවිසීමට සබැඳිය ක්ලික් කරන්න / Click to view interactive 3D card:*
-${link}`;
-
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textStr)}`, "_blank");
-  });
-
-  emailBtn.addEventListener('click', () => {
-    const link = getShareLink();
-    const sender = senderInput.value.trim() || "Digital Wesak Kalapaya";
-    const recipient = recipientInput.value.trim() || "Everyone";
-    const message = messageInput.value.trim() || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!";
-    
     const subject = encodeURIComponent("පින්බර වෙසක් මංගල්‍යයක් වේවා! / A Digital Wesak Blessing for You");
     const body = encodeURIComponent(
 `🪷 ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත 🪷
@@ -543,7 +543,10 @@ To: ${recipient}
 
 From: ${sender}
 ----------------------------------------
-ඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත නැරඹීමට සහ වෙසක් කලාපයට පිවිසීමට පහත සබැඳිය ක්ලික් කරන්න / Click the link below to view:
+
+[ මම ඔබේ වෙසක් සුබපැතුම් පතේ පින්තූරය clipboard එකට පිටපත් කර ඇත. කරුණාකර email පණිවිඩය තුළ Ctrl+V හෝ Paste කරන්න! / I have copied the wish card image to your clipboard. Simply Paste (Ctrl+V) inside your email body to embed/insert it! ]
+
+ඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත නැරඹීමට සහ වෙසක් කලාපයට පිවිසීමට පහත සබැඳිය ක්ලික් කරන්න / Click the link below to view it online:
 
 ${link}`);
     window.open(`mailto:?subject=${subject}&body=${body}`, "_self");

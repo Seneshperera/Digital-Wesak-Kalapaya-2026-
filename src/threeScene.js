@@ -318,10 +318,10 @@ export class WesakThree {
 
   extractFBXLanterns(fbx) {
     const mappings = [
-      { body: 'Cube004', tails: ['Plane005', 'Plane006'], color: 0xffb703 }, // Yellow Octagonal
-      { body: 'Cube002', tails: ['Plane004', 'Plane003'], color: 0xff4d6d }, // Pink
-      { body: 'Cube001', tails: ['Plane001', 'Plane002'], color: 0x00f5d4 }, // Cyan
-      { body: 'Cube003', tails: ['Plane007', 'Plane008'], color: 0xfb8500 }  // Orange
+      { body: 'Cube.004', tails: ['Plane.005', 'Plane.006'], color: 0xffb703 }, // Yellow Octagonal
+      { body: 'Cube.002', tails: ['Plane.004', 'Plane.003'], color: 0xff4d6d }, // Pink
+      { body: 'Cube.001', tails: ['Plane.001', 'Plane.002'], color: 0x00f5d4 }, // Cyan
+      { body: 'Cube.003', tails: ['Plane.007', 'Plane.008'], color: 0xfb8500 }  // Orange
     ];
 
     this.lanternTemplates = [];
