@@ -1371,6 +1371,10 @@ html, body {
   letter-spacing: 0.5px;
 }
 
+.share-action-btn.download-image {
+  background: linear-gradient(135deg, #8338ec 0%, #3a86c8 100%);
+  color: #ffffff;
+}
 .share-action-btn.copy-link {
   background: linear-gradient(135deg, #ffb703 0%, #ffd200 100%);
 }
@@ -1466,6 +1470,78 @@ html, body {
 .received-action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 15px 35px rgba(251, 133, 0, 0.55);
+}
+
+.received-download-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 30px;
+  color: var(--white-soft);
+  padding: 0.8rem 1.8rem;
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s ease;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.received-download-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--gold-solid);
+  box-shadow: 0 0 15px rgba(255, 183, 3, 0.2);
+  transform: translateY(-1px);
+}
+
+.received-download-btn .btn-icon {
+  font-size: 1.1rem;
+}
+
+.received-home-link-container {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.received-web-link-text {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--gold-solid);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 1px;
+  position: relative;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 5px rgba(255, 183, 3, 0.3);
+}
+
+.received-web-link-text::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: var(--gold-solid);
+  transform-origin: bottom right;
+  transition: transform 0.25s ease-out;
+}
+
+.received-web-link-text:hover {
+  color: var(--white-soft);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.received-web-link-text:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+  background-color: var(--white-soft);
 }
 
 /* ==========================================

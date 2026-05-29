@@ -692,15 +692,11 @@ export class WesakThree {
     // Position centerGroup slightly above the ground plane
     centerGroup.position.set(0, 0.2, 0);
 
-    // Override material to make it a beautiful, clean, traditional white plaster stupa with glowing night highlights, preserving original textures
+    // Keep the original materials (gold spire, stone pillars, etc.) and textures, only making them support transparency and start hidden
     model.traverse(child => {
       if (child.isMesh && child.material) {
         const applyMaterialTweaks = (mat) => {
           const newMat = mat.clone();
-          newMat.color.setHex(0xffffff);
-          newMat.roughness = 0.85;
-          newMat.metalness = 0.0;
-          newMat.emissive = new THREE.Color(0x333333); // Spiritual white glow in the dark
           newMat.side = THREE.DoubleSide;
           newMat.transparent = true;
           newMat.opacity = 0; // start hidden
@@ -709,12 +705,25 @@ export class WesakThree {
 
         if (Array.isArray(child.material)) {
           child.material = child.material.map(applyMaterialTweaks);
+          child.userData.baseOpacity = child.material[0].opacity !== undefined ? child.material[0].opacity : 1.0;
         } else {
           child.material = applyMaterialTweaks(child.material);
+          child.userData.baseOpacity = child.material.opacity !== undefined ? child.material.opacity : 1.0;
         }
-        child.userData.baseOpacity = 1.0;
+        if (child.userData.baseOpacity === 0) {
+          child.userData.baseOpacity = 1.0; // Ensure it becomes visible when faded in
+        }
       }
     });
+
+    // Add local lights to illuminate the stupa with beautiful 3D shading, showing off brick textures and gold elements
+    const keyLight = new THREE.PointLight(0xffffff, 4.0, 18);
+    keyLight.position.set(3, 4, 4); // right, top, front
+    group.add(keyLight);
+
+    const fillLight = new THREE.PointLight(0xddeeff, 2.0, 18);
+    fillLight.position.set(-3, 2, -4); // left, mid, back
+    group.add(fillLight);
   }
 
   setupMahaweliSthupa(model) {
@@ -746,11 +755,31 @@ export class WesakThree {
 
     model.traverse(child => {
       if (child.isMesh && child.material) {
-        child.userData.baseOpacity = child.material.opacity !== undefined ? child.material.opacity : 1.0;
-        child.material.transparent = true;
-        child.material.opacity = 0; // start hidden
+        if (Array.isArray(child.material)) {
+          child.userData.baseOpacity = child.material[0].opacity !== undefined ? child.material[0].opacity : 1.0;
+          child.material.forEach(m => {
+            m.transparent = true;
+            m.opacity = 0; // start hidden
+          });
+        } else {
+          child.userData.baseOpacity = child.material.opacity !== undefined ? child.material.opacity : 1.0;
+          child.material.transparent = true;
+          child.material.opacity = 0; // start hidden
+        }
+        if (child.userData.baseOpacity === 0) {
+          child.userData.baseOpacity = 1.0;
+        }
       }
     });
+
+    // Add local lights for Mahaweli Sthupa
+    const keyLight = new THREE.PointLight(0xfffae0, 3.5, 18);
+    keyLight.position.set(3, 4, 3);
+    group.add(keyLight);
+
+    const fillLight = new THREE.PointLight(0xddeeff, 1.5, 18);
+    fillLight.position.set(-3, 2, -3);
+    group.add(fillLight);
   }
 
   build3DThoranaStructure(group, textureMap, primaryBulbColor) {
@@ -1221,8 +1250,16 @@ export class WesakThree {
         // Apply opacity fade to all children meshes recursively
         exhibitGroup.traverse(child => {
           if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = (child.userData.baseOpacity || 0.85) * exhibitGroup.userData.opacity;
+            const opacityVal = (child.userData.baseOpacity !== undefined ? child.userData.baseOpacity : 1.0) * exhibitGroup.userData.opacity;
+            if (Array.isArray(child.material)) {
+              child.material.forEach(m => {
+                m.transparent = true;
+                m.opacity = opacityVal;
+              });
+            } else {
+              child.material.transparent = true;
+              child.material.opacity = opacityVal;
+            }
           }
         });
       }
@@ -1260,8 +1297,16 @@ export class WesakThree {
         onUpdate: () => {
           activeGroup.traverse(child => {
             if (child.isMesh && child.material) {
-              child.material.transparent = true;
-              child.material.opacity = (child.userData.baseOpacity || 0.85) * activeGroup.userData.opacity;
+              const opacityVal = (child.userData.baseOpacity !== undefined ? child.userData.baseOpacity : 1.0) * activeGroup.userData.opacity;
+              if (Array.isArray(child.material)) {
+                child.material.forEach(m => {
+                  m.transparent = true;
+                  m.opacity = opacityVal;
+                });
+              } else {
+                child.material.transparent = true;
+                child.material.opacity = opacityVal;
+              }
             }
           });
         },

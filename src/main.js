@@ -256,6 +256,130 @@ function animate() {
 }
 
 // 8. Wishes modal creation and sharing features
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+
+  for (let n = 0; n < words.length; n++) {
+    let testLine = currentLine + words[n] + ' ';
+    let metrics = ctx.measureText(testLine);
+    let testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      lines.push(currentLine.trim());
+      currentLine = words[n] + ' ';
+    } else {
+      currentLine = testLine;
+    }
+  }
+  lines.push(currentLine.trim());
+
+  // Center vertical alignment calculation
+  let startY = y - ((lines.length - 1) * lineHeight) / 2;
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], x, startY + (i * lineHeight));
+  }
+}
+
+function generateCardImageURL(sender, recipient, message, templateId) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 800;
+  const ctx = canvas.getContext('2d');
+
+  // 1. Setup Gradient, Colors & Styling variables
+  let grad;
+  let textColor;
+  let accentColor;
+  let dashedBorderColor;
+
+  if (templateId === 2) { // Serene Lotus Night
+    grad = ctx.createRadialGradient(320, 400, 50, 320, 400, 500);
+    grad.addColorStop(0, '#0f1d46');
+    grad.addColorStop(1, '#030614');
+    textColor = '#fdf2f4';
+    accentColor = '#ff4d6d';
+    dashedBorderColor = 'rgba(255, 77, 109, 0.3)';
+  } else if (templateId === 3) { // Lantern Horizon
+    grad = ctx.createRadialGradient(320, 400, 50, 320, 400, 500);
+    grad.addColorStop(0, '#351306');
+    grad.addColorStop(1, '#0e050c');
+    textColor = '#fff7f2';
+    accentColor = '#fb8500';
+    dashedBorderColor = 'rgba(251, 133, 0, 0.3)';
+  } else { // Golden Temple Glow (Template 1)
+    grad = ctx.createRadialGradient(320, 400, 50, 320, 400, 500);
+    grad.addColorStop(0, '#281c06');
+    grad.addColorStop(1, '#0a0702');
+    textColor = '#fffdec';
+    accentColor = '#ffb703';
+    dashedBorderColor = 'rgba(255, 210, 0, 0.3)';
+  }
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 640, 800);
+
+  // 2. Draw outer border frame (glowing solid)
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 4;
+  ctx.shadowColor = accentColor;
+  ctx.shadowBlur = 15;
+  ctx.strokeRect(20, 20, 600, 760);
+
+  // 3. Draw inner dashed border frame
+  ctx.strokeStyle = dashedBorderColor;
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 0; // disable shadow for clean dashed line
+  ctx.setLineDash([8, 8]);
+  ctx.strokeRect(36, 36, 568, 728);
+  ctx.setLineDash([]); // reset line dash
+
+  // 4. Draw Lotus Emblem
+  ctx.fillStyle = accentColor;
+  ctx.font = '64px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = accentColor;
+  ctx.shadowBlur = 10;
+  ctx.fillText('🪷', 320, 110);
+  ctx.shadowBlur = 0; // reset shadow
+
+  // 5. Draw Recipient (To)
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 24px "Outfit", sans-serif';
+  ctx.fillText(`TO: ${recipient.toUpperCase()}`, 320, 200);
+
+  // 6. Draw Message Body (wrapped & centered)
+  ctx.fillStyle = textColor;
+  ctx.font = 'italic 28px "Noto Serif Sinhala", serif';
+  const msgText = message.startsWith('"') ? message : `"${message}"`;
+  wrapCanvasText(ctx, msgText, 320, 400, 480, 45);
+
+  // 7. Draw Sender (From)
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 24px "Outfit", sans-serif';
+  ctx.fillText(`FROM: ${sender.toUpperCase()}`, 320, 600);
+
+  // 8. Draw Dharmachakra Motif
+  ctx.fillStyle = accentColor;
+  ctx.globalAlpha = 0.35;
+  ctx.font = '36px sans-serif';
+  ctx.fillText('☸', 320, 700);
+  ctx.globalAlpha = 1.0; // restore alpha
+
+  return canvas.toDataURL('image/png');
+}
+
+function triggerCardDownload(sender, recipient, message, templateId) {
+  const dataURL = generateCardImageURL(sender, recipient, message, templateId);
+  const link = document.createElement('a');
+  link.download = `wesak_wish_card_${sender.replace(/\s+/g, '_')}.png`;
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 function initWishesFeature() {
   const wishesModal = document.getElementById('wishes-modal');
   const createWishBtn = document.getElementById('create-wish-btn');
@@ -273,6 +397,7 @@ function initWishesFeature() {
   const templateOptions = document.querySelectorAll('.template-option');
   const presetBtns = document.querySelectorAll('.preset-btn');
   
+  const downloadBtn = document.getElementById('download-wish-card-btn');
   const copyLinkBtn = document.getElementById('copy-wish-link-btn');
   const whatsappBtn = document.getElementById('whatsapp-wish-btn');
   const emailBtn = document.getElementById('email-wish-btn');
@@ -355,6 +480,15 @@ function initWishesFeature() {
     return `${window.location.origin}${window.location.pathname}?wish=${b64}`;
   };
 
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      const sender = senderInput.value.trim() || "Digital Wesak Kalapaya";
+      const recipient = recipientInput.value.trim() || "Everyone";
+      const message = messageInput.value.trim() || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!";
+      triggerCardDownload(sender, recipient, message, selectedTemplate);
+    });
+  }
+
   copyLinkBtn.addEventListener('click', () => {
     const link = getShareLink();
     navigator.clipboard.writeText(link).then(() => {
@@ -374,17 +508,49 @@ function initWishesFeature() {
 
   whatsappBtn.addEventListener('click', () => {
     const link = getShareLink();
-    const text = encodeURIComponent("🪷 ඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් සුභ පැතුම් පතක්! / A special Digital Wesak Wish for you: " + link);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+    const sender = senderInput.value.trim() || "Digital Wesak Kalapaya";
+    const recipient = recipientInput.value.trim() || "Everyone";
+    const message = messageInput.value.trim() || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!";
+    
+    const textStr = 
+`🪷 *ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත* 🪷
+----------------------------------------
+*To:* ${recipient}
+
+_" ${message} "_
+
+*From:* ${sender}
+----------------------------------------
+👇 *ප්‍රාර්ථනා පත නැරඹීමට සහ ඩිජිටල් වෙසක් කලාපයට පිවිසීමට සබැඳිය ක්ලික් කරන්න / Click to view interactive 3D card:*
+${link}`;
+
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textStr)}`, "_blank");
   });
 
   emailBtn.addEventListener('click', () => {
     const link = getShareLink();
+    const sender = senderInput.value.trim() || "Digital Wesak Kalapaya";
+    const recipient = recipientInput.value.trim() || "Everyone";
+    const message = messageInput.value.trim() || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!";
+    
     const subject = encodeURIComponent("පින්බර වෙසක් මංගල්‍යයක් වේවා! / A Digital Wesak Blessing for You");
-    const body = encodeURIComponent("තෙරුවන් සරණින් ඔබට සාමකාමී වෙසක් මංගල්‍යයක් වේවා!\n\nඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත නැරඹීමට පහත සබැඳිය ක්ලික් කරන්න:\n\n" + link);
+    const body = encodeURIComponent(
+`🪷 ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත 🪷
+----------------------------------------
+To: ${recipient}
+
+" ${message} "
+
+From: ${sender}
+----------------------------------------
+ඔබට ලැබුණු විශේෂ ඩිජිටල් වෙසක් ප්‍රාර්ථනා කාඩ්පත නැරඹීමට සහ වෙසක් කලාපයට පිවිසීමට පහත සබැඳිය ක්ලික් කරන්න / Click the link below to view:
+
+${link}`);
     window.open(`mailto:?subject=${subject}&body=${body}`, "_self");
   });
 }
+
+let receivedWishData = null;
 
 function checkReceivedWish() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -405,14 +571,23 @@ function checkReceivedWish() {
     const receivedFrom = document.getElementById('received-from');
     const receivedMessage = document.querySelector('#received-card .card-message-field');
     const enterReceivedBtn = document.getElementById('enter-received-kalapaya-btn');
+    const downloadReceivedBtn = document.getElementById('download-received-card-btn');
+    const receivedWebLink = document.getElementById('received-web-link');
 
     if (receivedOverlay && receivedCard && data) {
+      receivedWishData = data;
       receivedTo.textContent = data.r || "Everyone";
       receivedFrom.textContent = data.s || "Digital Wesak Kalapaya";
       receivedMessage.textContent = data.m ? `"${data.m}"` : "";
       
       // Apply theme template class
       receivedCard.className = `wish-card template-${data.t || 1}`;
+
+      // Update dynamics for home link
+      if (receivedWebLink) {
+        receivedWebLink.href = window.location.origin;
+        receivedWebLink.textContent = window.location.host;
+      }
 
       // Show received wish overlay and hide standard gate
       receivedOverlay.classList.remove('hidden');
@@ -422,6 +597,20 @@ function checkReceivedWish() {
       if (enterReceivedBtn) {
         enterReceivedBtn.addEventListener('click', async () => {
           await startExperience();
+        });
+      }
+
+      // Bind download button on recipient overlay
+      if (downloadReceivedBtn) {
+        downloadReceivedBtn.addEventListener('click', () => {
+          if (receivedWishData) {
+            triggerCardDownload(
+              receivedWishData.s || "Digital Wesak Kalapaya",
+              receivedWishData.r || "Everyone",
+              receivedWishData.m || "මෙම වෙසක් මංගල්‍යය ඔබගේ ජීවිතයට සාමය, සතුට සහ නිවන උදාකර දෙන්නක් වේවා!",
+              receivedWishData.t || 1
+            );
+          }
         });
       }
     }
