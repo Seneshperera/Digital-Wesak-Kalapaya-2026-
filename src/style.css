@@ -809,11 +809,27 @@ html, body {
   }
 
   #scene-info-panel.side-panel {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 600px;
+    left: auto;
+    right: 1.2rem;
+    transform: none;
+    max-width: 290px;
+    width: calc(100% - 2.4rem);
     bottom: 5.5rem;
+  }
+
+  #scene-info-panel.side-panel .desc-card {
+    padding: 1rem 1.2rem;
+  }
+
+  #scene-info-panel.side-panel .sinhala-desc {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  #scene-info-panel.side-panel .english-desc {
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin-top: 0.4rem;
   }
   
   .gate-card {
